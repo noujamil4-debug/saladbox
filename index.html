@@ -2,47 +2,52 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saladbox Algeria</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Saladbox Algeria | المنيو الرسمي</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <!-- مكتبات Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --green: #10b981; --black: #0a0a0a; }
         body { font-family: 'Cairo', sans-serif; background-color: var(--black); color: white; margin: 0; }
-        .hero { height: 30vh; background: linear-gradient(rgba(0,0,0,0.6), var(--black)), url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1000'); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; }
-        .food-card { background: #161616; border-radius: 25px; border: 1px solid #222; overflow: hidden; margin: 20px; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .hero { height: 40vh; background: linear-gradient(rgba(0,0,0,0.7), var(--black)), url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1000'); background-size: cover; background-position: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .salad-text { color: var(--green); font-size: 4.5rem; font-weight: 900; font-style: italic; text-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+        .food-card { background: #161616; border-radius: 35px; border: 1px solid #222; margin: 20px; overflow: hidden; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        input { background: #000 !important; border: 1px solid #333 !important; color: white !important; width: 100%; padding: 18px; border-radius: 20px; margin-bottom: 12px; outline: none; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="hero"><h1 class="text-5xl font-black text-[#10b981] italic">Saladbox</h1></div>
+    <div class="hero">
+        <h1 class="salad-text">Saladbox</h1>
+        <p class="text-[10px] tracking-[8px] text-gray-400 uppercase font-bold">Premium Healthy Food</p>
+    </div>
 
+    <!-- صنف واحد للتجربة (يمكنك إضافة البقية لاحقاً) -->
     <div class="food-card">
-        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600" class="w-full h-52 object-cover">
+        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600" class="w-full h-56 object-cover">
         <div class="p-6">
-            <h3 class="text-xl font-bold">Chicken Royal</h3>
-            <p class="text-[#10b981] font-black text-lg">1,250 DA</p>
-            <button onclick="openForm('Chicken Royal', 1250)" class="w-full bg-[#10b981] text-black py-4 rounded-xl font-black mt-4">اطلب الآن 📥</button>
+            <h2 class="text-2xl font-bold italic mb-1 uppercase">Chicken Royal</h2>
+            <p class="text-[#10b981] font-black text-xl mb-6">1,250 DA</p>
+            <button onclick="openOrder('Chicken Royal', 1250)" class="w-full bg-[#10b981] text-black py-5 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition">إرسال الطلب الآن 📥</button>
         </div>
     </div>
 
-    <!-- نافذة البيانات -->
+    <!-- نافذة بيانات الزبون -->
     <div id="orderModal" class="modal">
-        <div class="bg-[#1a1a1a] border-2 border-[#10b981] p-8 rounded-[40px] w-full max-w-sm text-center">
-            <h2 class="text-xl font-black mb-6 text-[#10b981]">أدخل بياناتك 📝</h2>
-            <input id="uName" type="text" placeholder="الاسم" class="w-full p-4 rounded-xl mb-4 bg-black border border-gray-800 text-white outline-none">
-            <input id="uPhone" type="tel" placeholder="رقم الهاتف" class="w-full p-4 rounded-xl mb-4 bg-black border border-gray-800 text-white outline-none text-center">
-            <input id="uLoc" type="text" placeholder="موقعك في الجزائر" class="w-full p-4 rounded-xl mb-6 bg-black border border-gray-800 text-white outline-none">
-            <button onclick="submitOrder()" class="w-full bg-[#10b981] text-black py-4 rounded-xl font-black uppercase shadow-lg">تأكيد الطلب</button>
+        <div class="bg-[#1a1a1a] border-2 border-[#10b981] p-8 rounded-[45px] w-full max-w-sm">
+            <h2 class="text-2xl font-black mb-8 text-[#10b981] text-center">أدخل بياناتك 📝</h2>
+            <input id="userName" type="text" placeholder="الاسم الكامل">
+            <input id="userPhone" type="tel" placeholder="رقم الهاتف (واتساب)">
+            <input id="userLoc" type="text" placeholder="الموقع في الجزائر العاصمة">
+            <button onclick="submitFinal()" id="finalBtn" class="w-full bg-[#10b981] text-black py-5 rounded-2xl font-black text-lg mt-4 shadow-lg active:scale-95 transition">تأكيد الإرسال</button>
         </div>
     </div>
 
     <script>
-        // إعدادات Firebase الخاصة بك
+        // إعدادات Firebase الخاصة بك (المأخوذة من صورك)
         const firebaseConfig = {
             apiKey: "AIzaSyDfVfaCVOoP_N_J1B6iSmDX4Vf7c3A", 
             databaseURL: "https://legibier-fa574-default-rtdb.firebaseio.com/",
@@ -51,38 +56,40 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let selectedItem = "";
-        let selectedPrice = 0;
+        let currentItem = ""; let currentPrice = 0;
 
-        function openForm(n, p) {
-            selectedItem = n;
-            selectedPrice = p;
+        function openOrder(n, p) {
+            currentItem = n; currentPrice = p;
             document.getElementById('orderModal').style.display = 'flex';
         }
 
-        function submitOrder() {
-            const name = document.getElementById('uName').value;
-            const phone = document.getElementById('uPhone').value;
-            const loc = document.getElementById('uLoc').value;
+        function submitFinal() {
+            const name = document.getElementById('userName').value;
+            const phone = document.getElementById('userPhone').value;
+            const loc = document.getElementById('userLoc').value;
+            const btn = document.getElementById('finalBtn');
 
-            if(!name || !phone) {
-                alert("يرجى ملء الاسم والهاتف!");
-                return;
-            }
+            if(!name || !phone) return alert("يرجى ملء البيانات أولاً!");
 
-            // الإرسال مع تنبيه بالنجاح
+            btn.innerText = "جاري الإرسال...";
+            btn.disabled = true;
+
+            // إرسال الطلب للسحاب
             db.ref('orders').push({
-                item: selectedItem,
-                price: selectedPrice,
+                item: currentItem,
+                price: currentPrice,
                 customer: name,
                 phone: phone,
                 location: loc,
-                status: 'waiting'
+                status: 'waiting',
+                time: new Date().toLocaleTimeString()
             }).then(() => {
-                alert("✅ مبروك! الطلب وصل للمطعم.");
+                alert("✅ مبروك! وصل طلبك للمطعم بنجاح.");
                 location.reload();
             }).catch((e) => {
-                alert("❌ خطأ في الإرسال: " + e.message);
+                alert("❌ فشل الاتصال بالسحاب: " + e.message);
+                btn.disabled = false;
+                btn.innerText = "تأكيد الإرسال";
             });
         }
     </script>
