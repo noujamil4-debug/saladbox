@@ -2,47 +2,74 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Saladbox Staff | المطبخ</title>
+    <title>لوحة إدارة الطلبات | Saladbox Staff</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Cairo', sans-serif; background: #000; color: white; }
-        .order-card { background: #0a0a0a; border-right: 8px solid #10b981; border-radius: 25px; animation: slideIn 0.5s ease; }
+        .order-card { background: #0a0a0a; border-right: 8px solid #10b981; border-radius: 25px; transition: 0.3s; }
+        .is-ready { opacity: 0.4; border-right-color: #555; filter: grayscale(1); }
         @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .animate-order { animation: slideIn 0.5s ease; }
     </style>
 </head>
 <body class="p-8">
-    <div class="flex justify-between items-center mb-12 bg-zinc-900/50 p-6 rounded-[30px] border border-zinc-800">
+
+    <!-- الرأس (Header) مع زر الحذف الكلي -->
+    <div class="flex flex-col md:flex-row justify-between items-center mb-12 bg-zinc-900/50 p-6 rounded-[30px] border border-zinc-800 gap-4">
         <div>
             <h1 class="text-3xl font-black text-green-500 italic uppercase tracking-tighter">SALADBOX STAFF</h1>
-            <p class="text-zinc-500 text-xs font-bold italic">نظام استقبال الطلبات المباشر</p>
+            <p class="text-zinc-500 text-xs font-bold italic">لوحة التحكم والمراقبة</p>
         </div>
-        <div class="text-green-500 font-black animate-pulse">متصل بالمطبخ 🟢</div>
+        
+        <div class="flex items-center gap-4">
+            <!-- زر حذف الكل -->
+            <button onclick="clearAllOrders()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-2xl font-black text-sm shadow-lg transition active:scale-95">
+                🗑️ حذف جميع الطلبات
+            </button>
+            <div class="text-green-500 font-black animate-pulse hidden md:block text-sm">متصل 🟢</div>
+        </div>
     </div>
+
+    <!-- قائمة الطلبات -->
     <div id="list" class="grid gap-6">
         <p id="empty" class="text-center text-zinc-800 py-40 italic text-2xl font-black uppercase">Waiting for orders...</p>
     </div>
+
+    <!-- صوت رنين التنبيه -->
     <audio id="bell" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
     <script>
-        const firebaseConfig = { databaseURL: "https://saladbox-f541b-default-rtdb.europe-west1.firebasedatabase.app/" };
+        // إعدادات Firebase الخاصة بك
+        const firebaseConfig = {
+            databaseURL: "https://saladbox-f541b-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+
+        // الاستماع للطلبات
         db.ref('orders').on('value', (snap) => {
             const list = document.getElementById('list');
             const empty = document.getElementById('empty');
             list.innerHTML = "";
+            
             if(snap.exists()) {
                 empty.style.display = 'none';
                 snap.forEach((child) => {
                     const o = child.val();
                     const id = child.key;
+                    
+                    // تحديد شكل الطلب إذا كان جاهزاً أم لا
+                    const readyClass = o.status === 'ready' ? 'is-ready' : '';
+                    const btnText = o.status === 'ready' ? 'وجبة جاهزة ✅' : 'تحديد كـ جاهز';
+
                     list.insertAdjacentHTML('afterbegin', `
-                        <div class="order-card p-8 flex justify-between items-center border border-zinc-900 shadow-2xl">
+                        <div id="card-${id}" class="order-card ${readyClass} p-8 flex justify-between items-center border border-zinc-900 shadow-2xl animate-order">
                             <div>
                                 <div class="flex items-center gap-3 mb-3">
-                                    <span class="bg-green-500 text-black px-4 py-1 rounded-full text-[10px] font-black uppercase italic">New Order</span>
+                                    <span class="bg-green-500 text-black px-4 py-1 rounded-full text-[10px] font-black uppercase italic tracking-tighter">Order</span>
                                     <span class="text-zinc-500 font-bold text-sm italic">${o.time}</span>
                                 </div>
                                 <h2 class="text-4xl font-black text-white italic uppercase tracking-tighter">${o.item}</h2>
@@ -51,15 +78,36 @@
                             </div>
                             <div class="text-center">
                                 <div class="text-3xl font-black mb-6 uppercase tracking-tighter">${o.price} DA</div>
-                                <button onclick="done('${id}')" class="bg-white text-black px-10 py-4 rounded-2xl font-black text-lg hover:bg-green-400 transition shadow-xl">تحضير ✅</button>
+                                <button onclick="markAsReady('${id}')" class="bg-white text-black px-10 py-4 rounded-2xl font-black text-lg hover:bg-green-400 transition shadow-xl">
+                                    ${btnText}
+                                </button>
                             </div>
                         </div>
                     `);
                 });
-                document.getElementById('bell').play().catch(e => {});
-            } else { empty.style.display = 'block'; }
+                
+                // تشغيل الجرس فقط إذا كان هناك طلب جديد (اختياري)
+                // document.getElementById('bell').play().catch(e => {});
+            } else {
+                empty.style.display = 'block';
+            }
         });
-        function done(id) { if(confirm("تم تحضير الطلب؟")) db.ref('orders/' + id).remove(); }
+
+        // وظيفة جعل الطلب "جاهز" (تغيير حالته فقط دون حذفه)
+        function markAsReady(id) {
+            db.ref('orders/' + id).update({
+                status: 'ready'
+            });
+        }
+
+        // وظيفة حذف جميع الطلبات من قاعدة البيانات نهائياً
+        function clearAllOrders() {
+            if(confirm("⚠️ هل أنت متأكد من حذف جميع الطلبات من القائمة؟ لا يمكن التراجع!")) {
+                db.ref('orders').remove().then(() => {
+                    alert("تم تنظيف القائمة بنجاح.");
+                });
+            }
+        }
     </script>
 </body>
 </html>
