@@ -3,120 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم عمال Saladbox | احترافية</title>
+    <title>لوحة تحكم Saladbox | الإدارة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --green: #10b981; --black: #0a0a0a; --l-black: #161616; }
-        body { font-family: 'Cairo', sans-serif; background-color: var(--black); color: white; padding: 15px; }
-        .stat-card { background: var(--l-black); border-radius: 20px; padding: 15px; border-bottom: 4px solid var(--green); text-align: center; }
-        .order-card { background: var(--l-black); border-radius: 25px; padding: 20px; border: 1px solid #222; margin-top: 15px; transition: 0.3s; }
-        .btn-action { font-weight: 900; font-size: 0.75rem; padding: 12px 5px; border-radius: 15px; transition: 0.2s; text-transform: uppercase; }
-        .btn-prep { background: #3b82f6; color: white; } /* أزرق للتحضير */
-        .btn-done { background: var(--green); color: black; } /* أخضر للإكمال */
-        .btn-del { background: #ef4444; color: white; } /* أحمر للحذف */
+        body { font-family: 'Cairo', sans-serif; background-color: #0a0a0a; color: white; padding: 15px; }
+        .order-card { background: #161616; border-radius: 25px; padding: 20px; border: 1px solid #222; margin-bottom: 15px; }
+        .btn-status { font-weight: 900; font-size: 0.7rem; padding: 12px 5px; border-radius: 12px; }
     </style>
 </head>
 <body>
 
-    <!-- الهيدر والإحصائيات -->
-    <header class="mb-6 bg-emerald-900/10 p-5 rounded-[30px] border border-green-500/20">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-black text-[#10b981]">إدارة SALADBOX</h1>
-            <span class="text-[9px] bg-green-500 text-black px-2 py-1 rounded-full font-bold animate-pulse">LIVE CONNECTED</span>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div class="stat-card">
-                <p class="text-[10px] text-gray-400 uppercase mb-1">طلبات اليوم</p>
-                <h2 id="totalOrders" class="text-2xl font-black text-white">0</h2>
-            </div>
-            <div class="stat-card">
-                <p class="text-[10px] text-gray-400 uppercase mb-1">صافي الربح</p>
-                <h2 id="totalProfit" class="text-xl font-black text-[#10b981]">0 <span class="text-[10px]">DA</span></h2>
-            </div>
-        </div>
+    <header class="flex justify-between items-center mb-6">
+        <h1 class="text-xl font-black text-[#10b981]">إدارة SALADBOX</h1>
+        <span id="conn-status" class="text-[9px] text-green-500 font-bold">متصل بالسحاب ●</span>
     </header>
 
-    <h2 class="text-sm font-black text-gray-500 uppercase tracking-[4px] mb-4 px-2">الطلبات الواردة</h2>
-    
-    <div id="list" class="space-y-4 pb-20">
-        <!-- تظهر الطلبات هنا -->
-        <p id="empty" class="text-center text-gray-700 py-20 font-bold italic">لا توجد طلبيات حالياً...</p>
+    <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="bg-[#161616] p-4 rounded-2xl border-b-4 border-white text-center shadow-lg">
+            <p class="text-[10px] text-gray-500 font-bold uppercase">الطلبات</p>
+            <h2 id="totalOrders" class="text-2xl font-black">0</h2>
+        </div>
+        <div class="bg-[#161616] p-4 rounded-2xl border-b-4 border-[#10b981] text-center shadow-lg">
+            <p class="text-[10px] text-gray-400 font-bold uppercase">إجمالي الأرباح</p>
+            <h2 id="totalProfit" class="text-xl font-black text-[#10b981]">0</h2>
+        </div>
+    </div>
+
+    <div id="list" class="space-y-4 pb-24">
+        <p id="loading-msg" class="text-center text-gray-700 mt-20 italic">جاري تحميل الطلبات من السحاب...</p>
     </div>
 
     <audio id="bell" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
 
     <script>
-        // إعدادات Firebase الخاصة بك
-        const config = { 
+        const config = {
             apiKey: "AIzaSyDfVfaCVOoP_N_J1B6iSmDX4Vf7c3A", 
-            databaseURL: "https://legibier-fa574-default-rtdb.firebaseio.com/", 
-            projectId: "legibier-fa574" 
+            databaseURL: "https://legibier-fa574-default-rtdb.firebaseio.com/",
+            projectId: "legibier-fa574"
         };
         firebase.initializeApp(config);
         const db = firebase.database();
 
+        // قراءة كل البيانات (القديمة والجديدة)
         db.ref('orders').on('value', (snapshot) => {
+            document.getElementById('loading-msg').style.display = 'none';
             const list = document.getElementById('list');
             list.innerHTML = "";
             let count = 0; let profit = 0;
 
             snapshot.forEach((child) => {
                 const o = child.val(); const id = child.key;
-                count++; profit += parseInt(o.price);
-                document.getElementById('empty').style.display = 'none';
+                
+                // حسابات المدير
+                count++;
+                profit += parseInt(o.price);
 
                 const html = `
-                    <div id="${id}" class="order-card shadow-2xl animate__animated animate__fadeInUp">
+                    <div class="order-card shadow-xl animate__animated animate__fadeIn">
                         <div class="flex justify-between mb-4">
-                            <h3 class="text-lg font-black text-white italic">${o.item}</h3>
-                            <span class="text-[9px] bg-white text-black px-3 py-1 rounded-full font-black uppercase">${o.status}</span>
+                            <h3 class="text-lg font-black text-white">${o.item}</h3>
+                            <span class="text-[9px] bg-[#10b981] text-black px-2 py-0.5 rounded font-black">${o.status}</span>
                         </div>
-                        
-                        <div class="bg-black/40 p-4 rounded-2xl mb-6 border border-gray-800">
-                            <p class="text-xs text-gray-400 mb-2 font-bold uppercase">العميل:</p>
-                            <p class="font-bold text-gray-200">${o.customer} | <span class="text-[#10b981]">${o.location}</span></p>
-                            <p class="text-blue-400 text-sm font-bold mt-1">${o.phone}</p>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-2">
-                            <button onclick="sendWA('${o.phone}', 'prep', '${o.customer}')" class="btn-action btn-prep">تحضير 👨‍🍳</button>
-                            <button onclick="sendWA('${o.phone}', 'done', '${o.customer}')" class="btn-action btn-done">تم الطلب ✅</button>
-                            <button onclick="removeOrder('${id}')" class="btn-action btn-del text-[9px]">حذف 🗑️</button>
+                        <p class="text-gray-400 text-xs mb-4">الزبون: ${o.customer || 'غير معروف'} | ${o.phone || ''}</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="updateStatus('${id}', 'accepted')" class="btn-status bg-blue-600 text-white">تحضير</button>
+                            <button onclick="updateStatus('${id}', 'ready')" class="btn-status bg-[#10b981] text-black">إكمال ✅</button>
+                            <button onclick="deleteOrder('${id}')" class="btn-status bg-red-800 text-white col-span-2 mt-2">حذف من القائمة 🗑️</button>
                         </div>
                     </div>`;
                 list.insertAdjacentHTML('afterbegin', html);
             });
 
             document.getElementById('totalOrders').innerText = count;
-            document.getElementById('totalProfit').innerText = profit.toLocaleString();
+            document.getElementById('totalProfit').innerText = profit.toLocaleString() + " DA";
         });
 
-        // وظيفة إرسال الواتساب
-        function sendWA(phone, type, name) {
-            let msg = "";
-            if(type === 'prep') {
-                msg = `مرحباً ${name}، طلبك من Saladbox Algeria دخل مرحلة التحضير الآن 👨‍🍳. سنوافيك عند الانتهاء!`;
-            } else {
-                msg = `مرحباً ${name}، طلبك من Saladbox أصبح جاهزاً تماماً! سيتم توصيله إليك الآن بالصحة والعافية ✅🛵.`;
+        // صوت الجرس عند أي إضافة جديدة
+        db.ref('orders').on('child_added', (snap, prevKey) => {
+            if (prevKey !== null) { // لكي لا يرن على الطلبات القديمة عند فتح الصفحة
+                document.getElementById('bell').play().catch(()=>{});
             }
-            // فتح واتساب
-            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        // وظيفة الحذف النهائي
-        function removeOrder(id) {
-            if(confirm("هل تريد حذف هذه الطلبية نهائياً؟")) {
-                db.ref('orders/' + id).remove();
-            }
-        }
-
-        // تشغيل الجرس عند الطلب الجديد
-        db.ref('orders').on('child_added', () => {
-            document.getElementById('bell').play().catch(()=>{});
         });
+
+        function updateStatus(id, s) { db.ref('orders/' + id).update({ status: s }); }
+        function deleteOrder(id) { if(confirm("هل تريد حذف الطلب نهائياً؟")) db.ref('orders/' + id).remove(); }
     </script>
 </body>
 </html>
