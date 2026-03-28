@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saladbox | المنيو الرسمي</title>
+    <!-- مكتبات احترافية -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+        :root { --green: #10b981; --black: #0a0a0a; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--black); color: white; margin: 0; }
+        .hero-title { color: var(--green); font-size: 3.5rem; font-weight: 900; font-style: italic; }
+        .nav-tabs { background: #1a1a1a; padding: 8px; border-radius: 50px; display: flex; gap: 10px; overflow-x: auto; width: 90%; margin: -25px auto 20px; border: 1px solid #333; position: relative; z-index: 10; }
+        .tab-btn { padding: 8px 20px; border-radius: 40px; font-size: 0.85rem; font-weight: 700; color: white; white-space: nowrap; transition: 0.3s; }
+        .tab-btn.active { background: var(--green); color: black; }
+        .food-card { background: #111; border-radius: 30px; overflow: hidden; border: 1px solid #222; margin-bottom: 20px; }
+        .order-btn { background: var(--green); color: black; font-weight: 900; width: 100%; padding: 15px; border-radius: 18px; transition: 0.3s; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    </style>
+</head>
+<body>
+
+    <!-- الهيدر -->
+    <div class="h-[35vh] flex flex-col items-center justify-center text-center bg-[url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800')] bg-cover bg-center">
+        <div class="absolute inset-0 bg-black/60 h-[35vh]"></div>
+        <h1 class="hero-title relative z-10">Saladbox</h1>
+        <p class="relative z-10 text-[10px] tracking-[6px] text-gray-300 uppercase font-bold">Premium Healthy Food</p>
+    </div>
+
+    <!-- التبويبات (Switch) -->
+    <div class="nav-tabs shadow-2xl">
+        <button class="tab-btn active">الكل</button>
+        <button class="tab-btn">سلطات</button>
+        <button class="tab-btn">باستا</button>
+        <button class="tab-btn">بروتين</button>
+    </div>
+
+    <!-- عرض المنتجات -->
+    <main class="p-4 grid gap-6">
+        <div class="food-card">
+            <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600" class="w-full h-52 object-cover opacity-80">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-black italic uppercase">Chicken Royal</h3>
+                    <span class="text-[#10b981] font-black text-lg">1250 DA</span>
+                </div>
+                <button onclick="openModal('Chicken Royal', 1250)" class="order-btn">طلب الطعام الآن 📥</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- استمارة الطلب -->
+    <div id="orderModal" class="modal">
+        <div class="bg-[#1a1a1a] border-2 border-[#10b981] p-8 rounded-[40px] w-full max-w-sm">
+            <h2 class="text-xl font-black mb-6 text-center text-[#10b981]">أكمل بيانات طلبك 📝</h2>
+            <input id="uName" type="text" placeholder="الاسم الكامل" class="w-full p-4 rounded-xl mb-4 bg-black border border-gray-800 text-white outline-none focus:border-[#10b981]">
+            <input id="uPhone" type="tel" placeholder="رقم الهاتف" class="w-full p-4 rounded-xl mb-6 bg-black border border-gray-800 text-white outline-none focus:border-[#10b981]">
+            <button onclick="submitOrder()" class="w-full bg-[#10b981] text-black py-4 rounded-xl font-black text-lg shadow-lg">تأكيد الطلب</button>
+            <button onclick="document.getElementById('orderModal').style.display='none'" class="w-full text-gray-500 text-xs mt-4 underline">إلغاء</button>
+        </div>
+    </div>
+
+    <script>
+        const config = {
+            apiKey: "AIzaSyDfVfaCVOoP_N_J1B6iSmDX4Vf7c3A",
+            databaseURL: "https://legibier-fa574-default-rtdb.firebaseio.com/",
+            projectId: "legibier-fa574"
+        };
+        firebase.initializeApp(config);
+        const db = firebase.database();
+
+        let currentItem = ""; let currentPrice = 0;
+
+        function openModal(n, p) { currentItem = n; currentPrice = p; document.getElementById('orderModal').style.display='flex'; }
+
+        function submitOrder() {
+            const name = document.getElementById('uName').value;
+            const phone = document.getElementById('uPhone').value;
+            
+            if(!name || !phone) {
+                return alert("يرجى إدخال اسمك ورقم هاتفك!");
+            }
+
+            // إرسال البيانات إلى السحاب (Firebase)
+            const orderId = "SBX_" + Date.now();
+            db.ref('orders/' + orderId).set({
+                item: currentItem,
+                price: currentPrice,
+                customer: name,
+                phone: phone,
+                status: 'waiting',
+                time: new Date().toLocaleTimeString()
+            });
+
+            alert("✅ مبروك! طلبك وصل للمطعم.");
+            document.getElementById('orderModal').style.display = 'none';
+            location.reload(); // لإعادة تصفير الصفحة
+        }
+    </script>
+</body>
+</html>
