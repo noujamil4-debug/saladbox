@@ -2,95 +2,161 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Saladbox Algeria | المنيو الرسمي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saladbox | Algeria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- مكتبة Firebase v8 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
     <style>
-        :root { --green: #10b981; --black: #0a0a0a; }
-        body { font-family: 'Cairo', sans-serif; background-color: var(--black); color: white; margin: 0; }
-        .hero { height: 40vh; background: linear-gradient(rgba(0,0,0,0.7), var(--black)), url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1000'); background-size: cover; background-position: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .salad-text { color: var(--green); font-size: 4.5rem; font-weight: 900; font-style: italic; text-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
-        .food-card { background: #161616; border-radius: 35px; border: 1px solid #222; margin: 20px; overflow: hidden; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        input { background: #000 !important; border: 1px solid #333 !important; color: white !important; width: 100%; padding: 18px; border-radius: 20px; margin-bottom: 12px; outline: none; text-align: center; font-weight: bold; }
+        :root { --green: #10b981; --black: #000000; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--black); color: white; margin: 0; overflow-x: hidden; }
+        #splash { position: fixed; inset: 0; background: black; display: flex; align-items: center; justify-content: center; z-index: 5000; transition: 0.8s; }
+        .splash-text { color: var(--green); font-size: 5rem; font-weight: 900; font-style: italic; animation: pulse 1.5s infinite; text-transform: uppercase; letter-spacing: -3px; }
+        #branch-view { display: none; height: 100vh; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #111 0%, #000 100%); }
+        .card { background: #0a0a0a; border: 1px solid #222; padding: 50px 30px; border-radius: 45px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        #menu-view { display: none; }
+        .hero { height: 30vh; background: linear-gradient(to bottom, transparent, #000), url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1000'); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; }
+        .cat-btn { padding: 10px 25px; border-radius: 40px; font-weight: 700; color: #555; white-space: nowrap; transition: 0.3s; }
+        .cat-btn.active { background: var(--green); color: black; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 6000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        input, select { background: #000 !important; border: 1px solid #222 !important; color: white !important; width: 100%; padding: 16px; border-radius: 20px; margin-bottom: 12px; text-align: center; outline: none; appearance: none; }
+        @keyframes pulse { 0% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 0.4; transform: scale(0.9); } }
     </style>
 </head>
 <body>
 
-    <div class="hero">
-        <h1 class="salad-text">Saladbox</h1>
-        <p class="text-[10px] tracking-[8px] text-gray-400 uppercase font-bold">Premium Healthy Food</p>
-    </div>
+    <!-- شاشة الترحيب -->
+    <div id="splash"><h1 class="splash-text">Saladbox</h1></div>
 
-    <!-- صنف واحد للتجربة (يمكنك إضافة البقية لاحقاً) -->
-    <div class="food-card">
-        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600" class="w-full h-56 object-cover">
-        <div class="p-6">
-            <h2 class="text-2xl font-bold italic mb-1 uppercase">Chicken Royal</h2>
-            <p class="text-[#10b981] font-black text-xl mb-6">1,250 DA</p>
-            <button onclick="openOrder('Chicken Royal', 1250)" class="w-full bg-[#10b981] text-black py-5 rounded-2xl font-black text-lg shadow-xl active:scale-95 transition">إرسال الطلب الآن 📥</button>
+    <!-- واجهة اختيار الفرع -->
+    <div id="branch-view">
+        <div class="card" onclick="startApp()">
+            <div class="text-5xl mb-6">📍</div>
+            <h3 class="text-4xl font-black text-green-500 mb-2 italic uppercase tracking-tighter">Sidi Yahia</h3>
+            <p class="text-zinc-500 mb-10 font-bold italic text-sm">سيدي يحيى - الجزائر العاصمة</p>
+            <button class="w-full bg-green-500 text-black py-5 rounded-[25px] font-black text-xl shadow-lg">دخول للمنيو</button>
         </div>
     </div>
 
-    <!-- نافذة بيانات الزبون -->
-    <div id="orderModal" class="modal">
-        <div class="bg-[#1a1a1a] border-2 border-[#10b981] p-8 rounded-[45px] w-full max-w-sm">
-            <h2 class="text-2xl font-black mb-8 text-[#10b981] text-center">أدخل بياناتك 📝</h2>
-            <input id="userName" type="text" placeholder="الاسم الكامل">
-            <input id="userPhone" type="tel" placeholder="رقم الهاتف (واتساب)">
-            <input id="userLoc" type="text" placeholder="الموقع في الجزائر العاصمة">
-            <button onclick="submitFinal()" id="finalBtn" class="w-full bg-[#10b981] text-black py-5 rounded-2xl font-black text-lg mt-4 shadow-lg active:scale-95 transition">تأكيد الإرسال</button>
+    <!-- واجهة المنيو -->
+    <div id="menu-view">
+        <div class="hero"><h1 class="text-5xl font-black italic text-green-500 uppercase tracking-tighter">Saladbox</h1></div>
+        <div class="flex gap-2 overflow-x-auto px-6 mb-10 no-scrollbar mt-[-30px] relative z-10">
+            <button onclick="filter('all', this)" class="cat-btn active">الكل</button>
+            <button onclick="filter('salads', this)" class="cat-btn">سلطات</button>
+            <button onclick="filter('pasta', this)" class="cat-btn">باستا</button>
+            <button onclick="filter('protein', this)" class="cat-btn">بروتين</button>
+        </div>
+        <main id="grid" class="p-6 grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto pb-32"></main>
+    </div>
+
+    <!-- نافذة الطلب -->
+    <div id="modal" class="modal">
+        <div class="bg-[#0a0a0a] border-2 border-green-500 p-10 rounded-[50px] w-full max-w-md shadow-2xl">
+            <h2 class="text-2xl font-black mb-8 text-center text-green-500 italic uppercase tracking-tighter">Confirm Order</h2>
+            <div id="orderInfo" class="mb-8 text-center bg-black/50 p-6 rounded-3xl border border-zinc-900 font-bold text-xl italic text-white"></div>
+            <input id="uName" type="text" placeholder="الاسم الكامل">
+            <input id="uPhone" type="tel" placeholder="رقم الهاتف">
+            <select id="uCommune">
+                <option value="" disabled selected>-- اختر بلدية التوصيل --</option>
+                <option value="Sidi Yahia">سيدي يحيى (Sidi Yahia)</option>
+                <option value="Hydra">حيدرة (Hydra)</option>
+                <option value="El Biar">الأبيار (El Biar)</option>
+                <option value="Dely Ibrahim">دالي إبراهيم (Dely Ibrahim)</option>
+            </select>
+            <button onclick="sendOrder()" class="w-full bg-green-500 text-black py-5 rounded-[22px] font-black text-xl mt-4 active:scale-95 transition">إرسال الطلب ✅</button>
+            <button onclick="document.getElementById('modal').style.display='none'" class="w-full text-zinc-600 mt-6 font-bold text-sm uppercase">إلغاء</button>
         </div>
     </div>
 
     <script>
-        // إعدادات Firebase الخاصة بك (المأخوذة من صورك)
+        // إعدادات Firebase الخاصة بك
         const firebaseConfig = {
-            apiKey: "AIzaSyDfVfaCVOoP_N_J1B6iSmDX4Vf7c3A", 
-            databaseURL: "https://legibier-fa574-default-rtdb.firebaseio.com/",
-            projectId: "legibier-fa574"
+            apiKey: "AIzaSyD5h3Luj1fmPBkZHJ9VukwA",
+            authDomain: "saladbox-f541b.firebaseapp.com",
+            databaseURL: "https://saladbox-f541b-default-rtdb.europe-west1.firebasedatabase.app/",
+            projectId: "saladbox-f541b"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let currentItem = ""; let currentPrice = 0;
+        // التحكم في الشاشات
+        setTimeout(() => { 
+            document.getElementById('splash').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('splash').style.display = 'none';
+                document.getElementById('branch-view').style.display = 'flex';
+            }, 800);
+        }, 2500);
 
-        function openOrder(n, p) {
-            currentItem = n; currentPrice = p;
-            document.getElementById('orderModal').style.display = 'flex';
+        function startApp() {
+            document.getElementById('branch-view').style.display = 'none';
+            document.getElementById('menu-view').style.display = 'block';
+            render('all');
         }
 
-        function submitFinal() {
-            const name = document.getElementById('userName').value;
-            const phone = document.getElementById('userPhone').value;
-            const loc = document.getElementById('userLoc').value;
-            const btn = document.getElementById('finalBtn');
+        const menu = [
+            { id: 1, cat: 'salads', name: 'Chicken Royal', price: 1250, img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600' },
+            { id: 2, cat: 'pasta', name: 'Pesto Pasta', price: 1450, img: 'https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=600' },
+            { id: 3, cat: 'protein', name: 'Salmon Bowl', price: 1850, img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600' }
+        ];
 
-            if(!name || !phone) return alert("يرجى ملء البيانات أولاً!");
+        let selected = null;
 
-            btn.innerText = "جاري الإرسال...";
-            btn.disabled = true;
+        function render(cat) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = menu.filter(i => cat === 'all' || i.cat === cat).map(i => `
+                <div class="bg-[#0a0a0a] p-5 rounded-[40px] border border-zinc-900 transition hover:border-green-500/30">
+                    <img src="${i.img}" class="w-full h-56 object-cover rounded-[30px] mb-6 shadow-2xl">
+                    <div class="flex justify-between items-center mb-6 px-2">
+                        <h3 class="text-xl font-black italic uppercase tracking-tighter">${i.name}</h3>
+                        <span class="bg-green-500 text-black px-4 py-1 rounded-xl font-black text-sm">${i.price} DA</span>
+                    </div>
+                    <button onclick="openModal(${i.id})" class="w-full bg-green-500 text-black py-4 rounded-2xl font-black text-lg">طلب الوجبة</button>
+                </div>
+            `).join('');
+        }
 
-            // إرسال الطلب للسحاب
-            db.ref('orders').push({
-                item: currentItem,
-                price: currentPrice,
-                customer: name,
-                phone: phone,
-                location: loc,
-                status: 'waiting',
-                time: new Date().toLocaleTimeString()
-            }).then(() => {
-                alert("✅ مبروك! وصل طلبك للمطعم بنجاح.");
-                location.reload();
-            }).catch((e) => {
-                alert("❌ فشل الاتصال بالسحاب: " + e.message);
-                btn.disabled = false;
-                btn.innerText = "تأكيد الإرسال";
-            });
+        function filter(cat, btn) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            render(cat);
+        }
+
+        function openModal(id) {
+            selected = menu.find(i => i.id === id);
+            document.getElementById('orderInfo').innerHTML = `<h4 class="text-green-500 font-black italic">${selected.name}</h4><p class="text-white mt-2 font-bold">${selected.price} DA</p>`;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function sendOrder() {
+            const name = document.getElementById('uName').value;
+            const phone = document.getElementById('uPhone').value;
+            const commune = document.getElementById('uCommune').value;
+
+            if(!name || !phone || !commune) return alert("الرجاء إدخال البيانات!");
+
+            const order = { 
+                item: selected.name, 
+                price: selected.price, 
+                customer: name, 
+                phone: phone, 
+                address: commune, 
+                time: new Date().toLocaleTimeString('ar-DZ') 
+            };
+            
+            // إرسال لـ Firebase (لوحة تحكم العمال)
+            db.ref('orders').push(order);
+
+            // إرسال لواتساب (للتأكيد)
+            const msg = `*طلب جديد - Saladbox*%0Aالوجبة: ${selected.name}%0Aالزبون: ${name}%0Aالهاتف: ${phone}%0Aالبلدية: ${commune}`;
+            window.open(`https://wa.me/213555000000?text=${msg}`);
+            
+            alert("✅ تم إرسال طلبك للمطعم!");
+            document.getElementById('modal').style.display = 'none';
         }
     </script>
 </body>
