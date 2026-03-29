@@ -3,160 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نموذج عرض | نظام الطلبات الذكي</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <title>36 Burger Street | Professional Menu</title>
+    
+    <!-- الخطوط والأيقونات -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 
     <style>
-        :root { --primary: #f97316; --black: #050505; }
-        body { font-family: 'Cairo', sans-serif; background-color: var(--black); color: white; margin: 0; overflow-x: hidden; }
-        
-        /* شاشة البداية الاحترافية */
-        #splash { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; transition: 0.8s; }
-        .logo-circle { width: 120px; height: 120px; border: 4px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; animation: pulse 1.5s infinite; }
-        
-        #branch-view { display: none; height: 100vh; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #151515 0%, #000 100%); }
-        .demo-card { background: #0a0a0a; border: 1px solid #222; padding: 40px; border-radius: 40px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 0 30px rgba(249, 115, 22, 0.1); }
-        
-        #menu-view { display: none; }
-        .hero { height: 35vh; background: linear-gradient(to bottom, transparent, #000), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1000'); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; }
-        .cat-btn { padding: 10px 25px; border-radius: 40px; font-weight: 700; color: #666; white-space: nowrap; transition: 0.3s; border: 1px solid #1a1a1a; }
-        .cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        :root {
+            --primary: #ff9f1c; /* البرتقالي الخاص بالمطعم */
+            --secondary: #ffbf69;
+            --dark: #0a0a0a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+        }
 
-        .food-card { background: #0a0a0a; border-radius: 35px; border: 1px solid #151515; transition: 0.3s; overflow: hidden; }
-        .food-card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background-color: var(--dark); color: white; overflow-x: hidden; scroll-behavior: smooth; }
 
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 6000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        input, select { background: #000 !important; border: 1px solid #333 !important; color: white !important; width: 100%; padding: 16px; border-radius: 20px; margin-bottom: 12px; text-align: center; outline: none; appearance: none; }
+        /* --- الواجهة الرئيسية (Hero) --- */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: radial-gradient(circle, #1a1a1a 0%, #0a0a0a 100%);
+            padding: 20px;
+        }
+
+        .hero h1 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: clamp(4rem, 15vw, 8rem);
+            color: var(--primary);
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 159, 28, 0.4);
+        }
+
+        .hero p { font-size: 1.2rem; color: #888; margin-bottom: 40px; }
+
+        /* معرض الصور تحت الاسم */
+        .food-preview {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            width: 100%;
+            max-width: 1000px;
+            padding: 20px;
+            scrollbar-width: none;
+        }
+        .food-preview::-webkit-scrollbar { display: none; }
+
+        .food-card-small {
+            min-width: 200px;
+            height: 250px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 20px;
+            border: 2px solid var(--primary);
+            transition: 0.5s;
+            position: relative;
+        }
+        .food-card-small:hover { transform: scale(1.1) rotate(3deg); z-index: 10; }
+
+        /* --- قسم المنيو --- */
+        .menu-section { padding: 80px 5%; }
+        .section-title { text-align: center; font-size: 3rem; color: var(--primary); margin-bottom: 50px; }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .item-card {
+            background: var(--card-bg);
+            border-radius: 25px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+        .item-card:hover { background: rgba(255, 159, 28, 0.1); border-color: var(--primary); }
         
-        #success-msg { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #22c55e; color: white; padding: 15px 30px; border-radius: 50px; font-weight: 900; z-index: 7000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .item-card img { width: 100%; border-radius: 15px; margin-bottom: 15px; }
+        .item-card h3 { font-size: 1.5rem; margin-bottom: 10px; }
+        .price-tag { color: var(--primary); font-size: 1.8rem; font-weight: 900; margin: 10px 0; display: block; }
 
-        @keyframes pulse { 0% { transform: scale(0.9); opacity: 0.5; } 50% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.9); opacity: 0.5; } }
+        .btn-order {
+            background: var(--primary);
+            color: black;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.3s;
+        }
+        .btn-order:hover { transform: scale(1.05); background: white; }
+
+        /* --- نافذة الطلب (Modal) --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            border: 1px solid var(--primary);
+        }
+
+        .modal-content h2 { color: var(--primary); margin-bottom: 20px; }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #333;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 8px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px; left: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #888;
+        }
+
     </style>
 </head>
 <body>
 
-    <div id="success-msg">✅ طلبك وصل للمطبخ فوراً!</div>
-
-    <!-- شاشة اللوجو العام -->
-    <div id="splash">
-        <div class="logo-circle"><span class="text-orange-500 text-4xl font-black italic">R</span></div>
-        <h1 class="text-white text-3xl font-black italic tracking-tighter">RESTAO PRO</h1>
-        <p class="text-gray-500 text-xs mt-4">نظام الطلبات الذكي</p>
-    </div>
-
-    <!-- واجهة اختيار المطعم (للتجربة) -->
-    <div id="branch-view">
-        <div class="demo-card">
-            <h3 class="text-2xl font-black text-white mb-2 italic">مرحباً بك في النموذج</h3>
-            <p class="text-zinc-500 mb-8 font-bold text-sm">هذه نسخة تجريبية لنظام إدارة المطاعم</p>
-            <button onclick="startApp()" class="w-full bg-orange-500 text-white py-4 rounded-[25px] font-black text-lg">تجرية المنيو الرقمي</button>
+    <!-- الواجهة الرئيسية -->
+    <section class="hero">
+        <h1 data-aos="zoom-in">36 BURGER STREET</h1>
+        <p data-aos="fade-up">طعم الشارع الأصلي بلمسة فخامة</p>
+        
+        <div class="food-preview" data-aos="fade-up" data-aos-delay="200">
+            <!-- استبدل الروابط بصور حقيقية -->
+            <div class="food-card-small" style="background-image: url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=500');"></div>
+            <div class="food-card-small" style="background-image: url('https://images.unsplash.com/photo-1619174470144-031230a3821a?q=80&w=500');"></div>
+            <div class="food-card-small" style="background-image: url('https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?q=80&w=500');"></div>
+            <div class="food-card-small" style="background-image: url('https://images.unsplash.com/photo-1541288097308-7b8e3f58c4c6?q=80&w=500');"></div>
         </div>
-    </div>
+        
+        <a href="#menu" style="color: var(--primary); margin-top: 30px; text-decoration: none;">انزل للمنيو <br> <i class="fas fa-chevron-down"></i></a>
+    </section>
 
-    <!-- المنيو الرئيسي -->
-    <div id="menu-view">
-        <div class="hero"><h1 class="text-5xl font-black italic text-white uppercase tracking-tighter">OUR MENU</h1></div>
-        <div class="flex gap-2 overflow-x-auto px-6 mb-10 mt-[-30px] relative z-10 no-scrollbar">
-            <button onclick="filter('all', this)" class="cat-btn active">الكل</button>
-            <button onclick="filter('burger', this)" class="cat-btn">برجر</button>
-            <button onclick="filter('pizza', this)" class="cat-btn">بيتزا</button>
-            <button onclick="filter('drinks', this)" class="cat-btn">مشروبات</button>
+    <!-- قسم المنيو -->
+    <section class="menu-section" id="menu">
+        <h2 class="section-title">القائمة الأسطورية</h2>
+        
+        <div class="menu-grid">
+            <!-- صنف 1 -->
+            <div class="item-card" data-aos="fade-up">
+                <img src="https://images.unsplash.com/photo-1624462966581-bc6d768cbce5?q=80&w=400" alt="Tacos">
+                <h3>تاكوس دجاج (Tacos Chiken)</h3>
+                <span class="price-tag">350 DA</span>
+                <button class="btn-order" onclick="openOrder('تاكوس دجاج')">اطلب الآن</button>
+            </div>
+
+            <!-- صنف 2 -->
+            <div class="item-card" data-aos="fade-up" data-aos-delay="100">
+                <img src="https://images.unsplash.com/photo-1586190848861-99aa4a171e90?q=80&w=400" alt="Burger">
+                <h3>برجر كريسبي (Crispy Sandwich)</h3>
+                <span class="price-tag">490 DA</span>
+                <button class="btn-order" onclick="openOrder('برجر كريسبي')">اطلب الآن</button>
+            </div>
+
+            <!-- صنف 3 -->
+            <div class="item-card" data-aos="fade-up" data-aos-delay="200">
+                <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=400" alt="Fajita">
+                <h3>فاجيتا دجاج (Fajita Chiken)</h3>
+                <span class="price-tag">250 DA</span>
+                <button class="btn-order" onclick="openOrder('فاجيتا دجاج')">اطلب الآن</button>
+            </div>
         </div>
-        <main id="grid" class="p-6 grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto pb-32"></main>
-    </div>
+    </section>
 
     <!-- نافذة الطلب -->
-    <div id="modal" class="modal">
-        <div class="bg-[#0a0a0a] border-2 border-orange-500 p-10 rounded-[50px] w-full max-w-md shadow-2xl text-center">
-            <h2 class="text-2xl font-black mb-8 text-orange-500 italic uppercase">تأكيد طلبك</h2>
-            <div id="orderInfo" class="mb-8 p-6 rounded-3xl border border-zinc-900 bg-black/50 text-white font-bold"></div>
-            <input id="uName" type="text" placeholder="اكتب اسمك هنا">
-            <input id="uPhone" type="tel" placeholder="رقم الهاتف">
-            <select id="uCommune">
-                <option value="" disabled selected>-- اختر المنطقة --</option>
-                <option value="الجزائر الوسطى">الجزائر الوسطى</option>
-                <option value="حيدرة">حيدرة</option>
-                <option value="سيدي يحيى">سيدي يحيى</option>
-                <option value="دالي ابراهيم">دالي ابراهيم</option>
-            </select>
-            <button id="sendBtn" onclick="sendOrder()" class="w-full bg-orange-500 text-white py-5 rounded-[22px] font-black text-xl mt-4">إرسال الطلب للمطعم ✅</button>
-            <button onclick="document.getElementById('modal').style.display='none'" class="w-full text-zinc-600 mt-6 font-bold text-sm">إلغاء</button>
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeOrder()">&times;</span>
+            <h2>تأكيد الطلب</h2>
+            <p id="selectedItem" style="color: #888; margin-bottom: 20px;"></p>
+            
+            <form id="orderForm">
+                <input type="text" placeholder="الاسم الكامل" required>
+                <input type="tel" placeholder="رقم الهاتف" required>
+                
+                <label>اختر البلدية (العاصمة):</label>
+                <select id="communes" required>
+                    <!-- سيتم ملؤها بواسطة JS -->
+                </select>
+                
+                <button type="submit" class="btn-order" style="margin-top: 10px;">إرسال الطلب عبر واتساب</button>
+            </form>
         </div>
     </div>
 
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
     <script>
-        // إعدادات Firebase الخاصة بك
-        const firebaseConfig = {
-            apiKey: "AIzaSyD5h3Luj1fmPBkZHJ9VukwAY98-K4B9_Y",
-            authDomain: "saladbox-f541b.firebaseapp.com",
-            databaseURL: "https://saladbox-f541b-default-rtdb.europe-west1.firebasedatabase.app/",
-            projectId: "saladbox-f541b"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        AOS.init({ duration: 1000, once: true });
 
-        setTimeout(() => { 
-            document.getElementById('splash').style.opacity = '0';
-            setTimeout(() => { document.getElementById('splash').style.display = 'none'; document.getElementById('branch-view').style.display = 'flex'; }, 800);
-        }, 2500);
-
-        function startApp() { document.getElementById('branch-view').style.display = 'none'; document.getElementById('menu-view').style.display = 'block'; render('all'); }
-
-        const menu = [
-            { id: 1, cat: 'burger', name: 'Premium Beef Burger', price: 950, img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600' },
-            { id: 2, cat: 'pizza', name: 'Pizza Margherita', price: 850, img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600' },
-            { id: 3, cat: 'drinks', name: 'Mojito Lemon', price: 450, img: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=600' }
+        // قائمة بلديات الجزائر العاصمة
+        const algerCommunes = [
+            "الجزائر الوسطى", "سيدي امحمد", "المدنية", "بلوزداد", "باب الوادي", "القصبة", "وادي قريش", "بوزريعة", 
+            "بئر مراد رايس", "الأبيار", "حيدرة", "ابن عكنون", "المرادية", "باش جراح", "المغاربية", "براقي", "الكاليتوس",
+            "وادي السمار", "الحراش", "بوروبة", "رويبة", "الرغاية", "هراوة", "براقي", "عين الطاية", "برج البحري", 
+            "المرسى", "برج الكيفان", "باب الزوار", "الدار البيضاء", "زرالدة", "سطاوالي", "عين البنيان", "حمادي", 
+            "الدويرة", "درارية", "عاشور", "بابا حسن", "سحاولة", "بئر خادم", "جسر قسنطينة", "تسالة المرجة"
         ];
 
-        function render(cat) {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = menu.filter(i => cat === 'all' || i.cat === cat).map(i => `
-                <div class="food-card p-5">
-                    <img src="${i.img}" class="w-full h-56 object-cover rounded-[30px] mb-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-black italic uppercase">${i.name}</h3>
-                        <span class="text-orange-500 font-black">${i.price} DA</span>
-                    </div>
-                    <button onclick="openModal(${i.id})" class="w-full bg-white text-black py-4 rounded-2xl font-black hover:bg-orange-500 hover:text-white transition">اطلب الآن</button>
-                </div>
-            `).join('');
+        const select = document.getElementById('communes');
+        algerCommunes.sort().forEach(commune => {
+            let option = document.createElement('option');
+            option.value = commune;
+            option.textContent = commune;
+            select.appendChild(option);
+        });
+
+        function openOrder(itemName) {
+            document.getElementById('selectedItem').textContent = "أنت تطلب: " + itemName;
+            document.getElementById('orderModal').style.display = 'flex';
         }
 
-        function filter(cat, btn) {
-            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            render(cat);
+        function closeOrder() {
+            document.getElementById('orderModal').style.display = 'none';
         }
 
-        let selected = null;
-        function openModal(id) {
-            selected = menu.find(i => i.id === id);
-            document.getElementById('orderInfo').innerHTML = `<p>${selected.name}</p><p class="text-orange-500">${selected.price} DA</p>`;
-            document.getElementById('modal').style.display = 'flex';
-        }
-
-        function sendOrder() {
-            const name = document.getElementById('uName').value;
-            const phone = document.getElementById('uPhone').value;
-            const commune = document.getElementById('uCommune').value;
-            if(!name || !phone || !commune) return alert("يرجى إكمال البيانات!");
-
-            const btn = document.getElementById('sendBtn');
-            btn.innerText = "جاري الإرسال...";
-            btn.disabled = true;
-
-            const order = { item: selected.name, price: selected.price, customer: name, phone: phone, address: commune, time: new Date().toLocaleTimeString('ar-DZ'), status: 'new' };
-            
-            db.ref('orders').push(order).then(() => {
-                document.getElementById('modal').style.display = 'none';
-                const msg = document.getElementById('success-msg');
-                msg.style.display = 'block';
-                setTimeout(() => { msg.style.display = 'none'; btn.innerText = "تأكيد الطلب 📥"; btn.disabled = false; }, 4000);
-            });
+        // إغلاق المودال عند الضغط خارجه
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('orderModal')) closeOrder();
         }
     </script>
 </body>
-                                               </html>
+</html>
