@@ -3,76 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>36 Burger Street | طلبات أسطورية</title>
+    <title>36 Burger Street | التجربة الأسطورية</title>
+    
+    <!-- الخطوط والأيقونات -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root { --primary: #ff9f1c; --dark: #0a0a0a; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body { background-color: var(--dark); color: white; }
-        
-        /* تصميم الهيرو والمنيو (نفس الستايل الأسطوري السابق) */
-        .hero { height: 60vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: radial-gradient(circle, #1a1a1a, #000); }
-        .hero h1 { font-family: 'Bebas Neue'; font-size: 5rem; color: var(--primary); margin: 0; }
-        
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 40px 8%; }
-        .item-card { background: #1a1a1a; padding: 20px; border-radius: 20px; border: 1px solid #333; text-align: center; }
-        .price { color: var(--primary); font-size: 1.5rem; font-weight: 900; margin: 10px 0; display: block; }
-        .btn-order { background: var(--primary); color: black; border: none; padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; width: 100%; }
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 
-        /* نافذة الطلب */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: #1a1a1a; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; border: 1px solid var(--primary); }
+    <style>
+        :root {
+            --primary: #ff9f1c;
+            --dark: #0a0a0a;
+            --overlay: rgba(0, 0, 0, 0.75); /* الطبقة السوداء الشفافة */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background-color: var(--dark); color: white; overflow-x: hidden; scroll-behavior: smooth; }
+
+        /* --- الواجهة الأسطورية (Layered Hero) --- */
+        .hero {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* الطبقة الأولى: صور الأكل */
+        .hero-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1920'); /* صورة أكل احترافية */
+            background-size: cover;
+            background-position: center;
+            animation: zoomBg 20s infinite alternate;
+            z-index: 1;
+        }
+
+        @keyframes zoomBg {
+            from { transform: scale(1); }
+            to { transform: scale(1.2); }
+        }
+
+        /* الطبقة الثانية: الغطاء الأسود الشفاف */
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay);
+            z-index: 2;
+        }
+
+        /* الطبقة الثالثة: اسم المطعم */
+        .hero-content {
+            position: relative;
+            z-index: 3;
+            text-align: center;
+        }
+
+        .hero-content h1 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: clamp(4rem, 15vw, 8rem);
+            color: var(--primary);
+            letter-spacing: 8px;
+            text-shadow: 0 0 30px rgba(255, 159, 28, 0.6);
+            margin-bottom: 20px;
+        }
+
+        .hero-content p {
+            font-size: 1.5rem;
+            color: #eee;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* --- خزانة المنيو (Menu Cabinet) --- */
+        .cabinet-section {
+            padding: 50px 5%;
+            text-align: center;
+        }
+
+        .cabinet-toggle {
+            background: var(--primary);
+            color: black;
+            padding: 20px 50px;
+            font-size: 2rem;
+            font-weight: 900;
+            border-radius: 15px;
+            cursor: pointer;
+            display: inline-block;
+            transition: 0.4s;
+            border: 4px solid #fff;
+            box-shadow: 0 10px 30px rgba(255, 159, 28, 0.4);
+        }
+
+        .cabinet-toggle:hover { transform: scale(1.05); background: white; }
+
+        .menu-cabinet-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.8s ease-out;
+            background: #111;
+            margin-top: 20px;
+            border-radius: 20px;
+        }
+
+        .menu-cabinet-content.open {
+            max-height: 2000px; /* يفتح بالكامل */
+            padding: 40px 20px;
+            border: 2px solid var(--primary);
+        }
+
+        /* تنسيق الأكلات داخل الخزانة */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .food-item {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 15px;
+            border-bottom: 4px solid var(--primary);
+            transition: 0.3s;
+        }
+        .food-item:hover { transform: translateY(-10px); background: #222; }
+
+        .food-item h3 { font-size: 1.6rem; color: var(--primary); margin-bottom: 10px; }
+        .food-item .price { font-size: 1.8rem; font-weight: 900; color: #fff; margin-bottom: 15px; display: block; }
+
+        .btn-order {
+            background: var(--primary); color: black; border: none;
+            padding: 10px 25px; border-radius: 50px; font-weight: bold;
+            cursor: pointer; width: 100%; font-size: 1.1rem;
+        }
+
+        /* --- نافذة الطلب (Modal) --- */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: #1a1a1a; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; border: 1px solid var(--primary);
+        }
         input, select { width: 100%; padding: 12px; margin-bottom: 15px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; }
+
     </style>
 </head>
 <body>
 
+    <!-- الواجهة الطبقية -->
     <section class="hero">
-        <h1>36 BURGER STREET</h1>
-        <p>طعم الشارع الحقيقي</p>
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content" data-aos="zoom-in">
+            <h1>36 BURGER STREET</h1>
+            <p>حيث يبدأ سحر المذاق الأصلي</p>
+            <br>
+            <a href="#cabinet" style="color: var(--primary); font-size: 2rem; text-decoration: none;"><i class="fas fa-chevron-down"></i></a>
+        </div>
     </section>
 
-    <div class="menu-grid" id="menu">
-        <div class="item-card">
-            <h3>تاكوس دجاج</h3>
-            <span class="price">350 DA</span>
-            <button class="btn-order" onclick="openOrder('تاكوس دجاج')">اطلب الآن</button>
+    <!-- خزانة المنيو -->
+    <section class="cabinet-section" id="cabinet">
+        <div class="cabinet-toggle" onclick="toggleMenu()">
+            <i class="fas fa-utensils"></i> اطلب الآن - افتح المنيو
         </div>
-        <div class="item-card">
-            <h3>فاجيتا دجاج</h3>
-            <span class="price">250 DA</span>
-            <button class="btn-order" onclick="openOrder('فاجيتا دجاج')">اطلب الآن</button>
-        </div>
-        <div class="item-card">
-            <h3>برجر كريسبي</h3>
-            <span class="price">490 DA</span>
-            <button class="btn-order" onclick="openOrder('برجر كريسبي')">اطلب الآن</button>
-        </div>
-    </div>
 
+        <div class="menu-cabinet-content" id="menuContent">
+            <h2 style="margin-bottom: 30px; font-size: 2.5rem; color: var(--primary);">قائمة الطعام (MENU)</h2>
+            
+            <div class="menu-grid">
+                <!-- أكلة 1 -->
+                <div class="food-item">
+                    <h3>تاكوس دجاج</h3>
+                    <span class="price">350 DA</span>
+                    <button class="btn-order" onclick="openOrder('تاكوس دجاج')">اختيار الطلب</button>
+                </div>
+
+                <!-- أكلة 2 -->
+                <div class="food-item">
+                    <h3>فاجيتا دجاج</h3>
+                    <span class="price">250 DA</span>
+                    <button class="btn-order" onclick="openOrder('فاجيتا دجاج')">اختيار الطلب</button>
+                </div>
+
+                <!-- أكلة 3 -->
+                <div class="food-item">
+                    <h3>برجر كريسبي أسطوري</h3>
+                    <span class="price">490 DA</span>
+                    <button class="btn-order" onclick="openOrder('برجر كريسبي')">اختيار الطلب</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- نافذة الطلب -->
     <div class="modal" id="orderModal">
         <div class="modal-content">
-            <h2 id="orderTitle" style="color:var(--primary)">تأكيد الطلب</h2>
+            <h2 id="orderTitle" style="color:var(--primary); text-align:center;">تأكيد الطلب</h2>
             <br>
             <input type="text" id="custName" placeholder="الاسم الكامل" required>
             <input type="tel" id="custPhone" placeholder="رقم الهاتف" required>
             <select id="custCommune">
-                <option value="">اختر البلدية (الجزائر العاصمة)</option>
+                <option value="">اختر بلدية التوصيل</option>
+                <option value="الجزائر الوسطى">الجزائر الوسطى</option>
+                <option value="سيدي امحمد">سيدي امحمد</option>
+                <option value="بوزريعة">بوزريعة</option>
+                <option value="باب الوادي">باب الوادي</option>
+                <option value="الحراش">الحراش</option>
+                <option value="الرويبة">الرويبة</option>
             </select>
-            <button class="btn-order" onclick="submitOrder()">إرسال الطلب</button>
-            <button style="background:none; color:gray; border:none; margin-top:10px; cursor:pointer;" onclick="closeOrder()">إلغاء</button>
+            <button class="btn-order" style="padding: 15px;" onclick="submitOrder()">تأكيد وإرسال الطلب 🍔</button>
+            <button style="background:none; color:gray; border:none; margin-top:15px; cursor:pointer; width:100%;" onclick="closeOrder()">إلغاء</button>
         </div>
     </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
 
     <script>
-        // دمج مفاتيحك الخاصة التي أرسلتها في الصورة
+        AOS.init();
+
+        // إعدادات Firebase الخاصة بك
         const firebaseConfig = {
-            apiKey: "AIzaSyD5h3Luj1fmPBkZHJ9VukwA", 
+            apiKey: "AIzaSyD5h3Luj1fmPBkZHJ9VukwA",
             authDomain: "saladbox-f541b.firebaseapp.com",
             projectId: "saladbox-f541b",
             storageBucket: "saladbox-f541b.appspot.com",
@@ -82,16 +241,16 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let selectedBurger = "";
+        // وظيفة فتح المنيو
+        function toggleMenu() {
+            const menu = document.getElementById('menuContent');
+            menu.classList.toggle('open');
+            if(menu.classList.contains('open')) {
+                window.scrollBy(0, 300);
+            }
+        }
 
-        // قائمة البلديات
-        const communes = ["الجزائر الوسطى", "سيدي امحمد", "بلوزداد", "باب الوادي", "بوزريعة", "دالي إبراهيم", "الشراقة", "الرويبة", "الحراش", "بئر مراد رايس", "حيدرة", "الأبيار"];
-        const select = document.getElementById('custCommune');
-        communes.forEach(c => {
-            let opt = document.createElement('option');
-            opt.value = c; opt.innerText = c;
-            select.appendChild(opt);
-        });
+        let selectedBurger = "";
 
         function openOrder(name) {
             selectedBurger = name;
@@ -106,20 +265,16 @@
             const phone = document.getElementById('custPhone').value;
             const commune = document.getElementById('custCommune').value;
 
-            if(!name || !phone || !commune) { alert("يرجى ملء جميع الخانات"); return; }
+            if(!name || !phone || !commune) { alert("يرجى إكمال البيانات"); return; }
 
             db.collection("orders").add({
-                customer: name,
-                phone: phone,
-                commune: commune,
-                item: selectedBurger,
-                status: "جديد",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                customer: name, phone: phone, commune: commune, item: selectedBurger,
+                status: "جديد", timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 alert("تم استلام طلبك يا بطل! 🍔");
                 closeOrder();
-            }).catch(err => alert("خطأ: " + err));
+            });
         }
     </script>
 </body>
-</html>
+                        </html>
